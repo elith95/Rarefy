@@ -81,9 +81,11 @@ design_rare <- function(comm, dist_xy = NULL, method = c("fun_div", "equation"),
     
     if(!is.character(formula)) stop("formula must be a string")
     str <- strsplit(gsub("[^a-zA-Z]", " ", formula), " ")[[1]]
-    if(!names(args) %in% str[nzchar(str)]) stop("The names in args must correspond to the formula terms")
+    if(!all(names(args) %in% str[nzchar(str)])) stop("The names in args must correspond to the formula terms")
     if(beta) stop("With the method equation in this package version you can't produce a distance matrix as output of the formula")
     
+    ind <- match(NA, unlist(args))
+    ind <- match(names(unlist(args)[ind]), names(args))
     nami <- rownames(comm)
     r_fin <- array(dim = c(ifelse(spatial, nrow(comm), resampling), nrow(comm)))
     
@@ -92,8 +94,8 @@ design_rare <- function(comm, dist_xy = NULL, method = c("fun_div", "equation"),
       else v <- sample(1:nrow(comm), nrow(comm))
       x <- comm[v,]
       x <- apply(x, 2, ifelse(mean, cummean, cumsum))
-      args[[ind]] <- x
-      r_fin[i,] <- unlist(lapply(2:nrow(comm), function(j) {
+      r_fin[i,] <- unlist(lapply(1:nrow(comm), function(j) {
+        args[[ind]] <- x[j,]
         res <- eval(parse(text = formula), args)
         return(res)
       }))
